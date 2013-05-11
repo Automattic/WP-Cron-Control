@@ -5,7 +5,7 @@ Donate link: http://hitchhackerguide.com
 Tested up to: 3.3
 Stable tag: trunk
 
-This plugin allows you to take control over the execution of cron jobs. 
+This plugin allows you to take control over the execution of cron jobs.
 
 == Description ==
 
@@ -23,7 +23,7 @@ This plugin implements a secret parameter and ensures that cron jobs are only ex
 == Limitations ==
 
 This plugin performs a `remove_action( 'sanitize_comment_cookies', 'wp_cron' );` call in order to disable the spawning of new cron processes via the regular WordPress method. If `wp_cron` is hooked in an other action or called directly this might cause trouble.
- 
+
 == Screenshots ==
 
 1. Settings screen to enable/disable various features.
@@ -40,7 +40,7 @@ This plugin performs a `remove_action( 'sanitize_comment_cookies', 'wp_cron' );`
 
 = Version 0.4 =
 
-* Implementing feedback from Yoast http://yoast.com/wp-plugin-review/wp-cron-control/, fixing button classes, more inline comments 
+* Implementing feedback from Yoast http://yoast.com/wp-plugin-review/wp-cron-control/, fixing button classes, more inline comments
 
 = Version 0.3 =
 
