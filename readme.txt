@@ -33,6 +33,7 @@ This plugin performs a `remove_action( 'sanitize_comment_cookies', 'wp_cron' );`
 = Version 0.7 =
 
 * Remove unneeded use of `$wpdb->prepare()` that triggered PHP warnings because a second argument wasn't provided.
+* Update interface text to be translatable.
 
 = Version 0.6 =
 
