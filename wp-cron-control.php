@@ -6,6 +6,7 @@
  Author: Thorsten Ott, Erick Hitter, Automattic
  Version: 0.7
  Author URI: http://hitchhackerguide.com
+ Text Domain: wp-cron-control
  */
 
 class WP_Cron_Control {
