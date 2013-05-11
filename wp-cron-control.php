@@ -18,7 +18,7 @@ class WP_Cron_Control {
 
 	private $plugin_prefix = 'wpcroncontrol_';
 	private $plugin_name = 'WP-Cron Control';
-	private $settings_page_name ='WP-Cron Control Settings';
+	private $settings_page_name = null;
 	private $dashed_name = 'wp-cron-control';
 	private $js_version = '20110801';
 	private $css_version = '20110801';
@@ -55,9 +55,21 @@ class WP_Cron_Control {
 		 * a filter similar to the default settings (ie wpcroncontrol_settings_texts) can be used to alter this values
 		 */
 		$this->settings_texts = (array) apply_filters( $this->plugin_prefix . 'settings_texts', array(
-			'enable'				=> array( 'label' => 'Enable ' . $this->plugin_name, 'desc' => 'Enable this plugin and allow requests to wp-cron.php only with the appended secret parameter.', 'type' => 'yesno' ),
-			'secret_string'			=> array( 'label' => 'Secret string', 'desc' => 'The secret parameter that needs to be appended to wp-cron.php requests.', 'type' => 'text' ),
-			'enable_scheduled_post_validation'	=> array( 'label' => 'Enable scheduled post validation', 'desc' => 'In some rare cases it can happen that even when running wp-cron via a scheduled system cron job posts miss their schedule. This feature makes sure that there is a scheduled event for each scheduled post.', 'type' => 'yesno' ),
+			'enable' => array(
+				'label' => sprintf( __( 'Enable %s', 'wp-cron-control' ), $this->plugin_name ),
+				'desc' => sprintf( __( 'Enable this plugin and allow requests to %s only with the appended secret parameter.', 'wp-cron-control' ), '<code>wp-cron.php</code>' ),
+				'type' => 'yesno'
+			),
+			'secret_string' => array(
+				'label' => __( 'Secret string', 'wp-cron-control' ),
+				'desc' => sprintf( __( 'The secret parameter that needs to be appended to %s requests.', 'wp-cron-control' ), '<code>wp-cron.php</code>' ),
+				'type' => 'text'
+			),
+			'enable_scheduled_post_validation' => array(
+				'label' => __( 'Enable scheduled post validation', 'wp-cron-control' ),
+				'desc' => sprintf( __( 'In some rare cases, it can happen that even when running %s via a scheduled system cron job, posts miss their schedule. This feature makes sure that there is a scheduled event for each scheduled post.', 'wp-cron-control' ), '<code>wp-cron</code>' ),
+				'type' => 'yesno'
+			),
 		) );
 
 		$user_settings = get_option( $this->plugin_prefix . 'settings' );
@@ -73,13 +85,15 @@ class WP_Cron_Control {
 		 */
 		if ( defined( 'WP_CRON_CONTROL_SECRET' ) ) {
 			$this->settings_texts['secret_string']['type'] = 'echo';
-			$this->settings_texts['secret_string']['desc'] = $this->settings_texts['secret_string']['desc'] . " Cannot be changed as it is defined via WP_CRON_CONTROL_SECRET";
+			$this->settings_texts['secret_string']['desc'] = $this->settings_texts['secret_string']['desc'] . sprintf( __( 'Cannot be changed as it is defined via %s.', 'wp-cron-control' ), "<code>WP_CRON_CONTROL_SECRET</code>" );
 			$this->settings['secret_string'] = WP_CRON_CONTROL_SECRET;
 		}
 
 	}
 
 	public static function init() {
+		self::instance()->settings_page_name = sprintf( __( '%s Settings', 'wp-cron-control' ), self::instance()->plugin_name );
+
 		if ( 1 == self::instance()->settings['enable'] ) {
 		}
 		self::instance()->prepare();
@@ -165,7 +179,7 @@ class WP_Cron_Control {
 							case 'yesno': ?>
 								<select name="<?php echo $this->plugin_prefix; ?>settings[<?php echo $setting; ?>]" id="<?php echo $this->dashed_name . '-' . $setting; ?>" class="postform">
 									<?php
-										$yesno = array( 0 => 'No', 1 => 'Yes' );
+										$yesno = array( 0 => __( 'No', 'wp-cron-control' ), 1 => __( 'Yes', 'wp-cron-control' ) );
 										foreach ( $yesno as $val => $txt ) {
 											echo '<option value="' . esc_attr( $val ) . '"' . selected( $value, $val, false ) . '>' . esc_html( $txt ) . "&nbsp;</option>\n";
 										}
@@ -189,16 +203,19 @@ class WP_Cron_Control {
 				<?php if ( 1 == $this->settings['enable'] ): ?>
 					<tr>
 						<td colspan="3">
-							<p>You enabled wp-cron-control. To make sure that scheduled tasks are still executed correctly you will need to setup a system cron job that will call wp-cron.php with the secret parameter defined in the settings.</p>
-							<p>
-								You can either use the function defined in this script and setup a cron job that calls either
-							</p>
+							<p><?php printf( __( 'You enabled %s. To make sure that scheduled tasks are still executed correctly, you will need to setup a system cron job that will call %s with the secret parameter defined in the settings.', 'wp-cron-control' ), $this->plugin_name, '<code>wp-cron.php</code>' ); ?></p>
+
+							<p><?php _e( 'You can use the function defined in this script and set up a cron job that calls either:', 'wp-cron-control' ); ?></p>
+
 							<p><code>php <?php echo __FILE__; ?> <?php echo get_site_url(); ?> <?php echo $this->settings['secret_string']; ?></code></p>
 							<p>or</p>
-							<p><code>wget -q "<?php echo get_site_url(); ?>/wp-cron.php?doing_wp_cron&<?php echo $this->settings['secret_string']; ?>"</code></p>
-							<p>You can setup an interval as low as one minute, but should consider a reasonable value of 5-15 minutes as well.</p>
-							<p>If you need help setting up a cron job please refer to the documentation that your provider offers.</p>
-							<p>Anyway, chances are high that either <a href="http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CpanelDocs/CronJobs#Adding a cron job" target="_blank">the CPanel</a>, <a href="http://download1.parallels.com/Plesk/PP10/10.3.1/Doc/en-US/online/plesk-administrator-guide/plesk-control-panel-user-guide/index.htm?fileName=65208.htm" target="_blank">Plesk</a> or <a href="http://www.thegeekstuff.com/2011/07/php-cron-job/" target="_blank">the crontab</a> documentation will help you.</p>
+							<p><code>wget -q "<?php echo get_site_url(); ?>/wp-cron.php?doing_wp_cron&amp;<?php echo $this->settings['secret_string']; ?>"</code></p>
+
+							<p><?php _e( 'You can set an interval as low as one minute, but should consider a reasonable value of 5-15 minutes as well.', 'wp-cron-control' ); ?></p>
+
+							<p><?php _e( 'If you need help setting up a cron job please refer to the documentation that your provider offers.', 'wp-cron-control' ); ?></p>
+
+							<p><?php printf( __( 'Anyway, chances are high that either the %s, %s, or %s documentation will help you.', 'wp-cron-control' ), '<a href="http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CpanelDocs/CronJobs#Adding a cron job" target="_blank">CPanel</a>', '<a href="http://download1.parallels.com/Plesk/PP10/10.3.1/Doc/en-US/online/plesk-administrator-guide/plesk-control-panel-user-guide/index.htm?fileName=65208.htm" target="_blank">Plesk</a>', '<a href="http://www.thegeekstuff.com/2011/07/php-cron-job/" target="_blank">crontab</a>' ); ?></p>
 						</td>
 					</tr>
 				<?php endif; ?>
@@ -209,10 +226,10 @@ class WP_Cron_Control {
 				if ( function_exists( 'submit_button' ) ) {
 					submit_button( null, 'primary', $this->dashed_name . '-submit', false );
 					echo ' ';
-					submit_button( 'Reset to Defaults', '', $this->dashed_name . '-defaults', false );
+					submit_button( __( 'Reset to Defaults', 'wp-cron-control' ), '', $this->dashed_name . '-defaults', false );
 				} else {
-					echo '<input type="submit" name="' . $this->dashed_name . '-submit" class="button-primary" value="Save Changes" />' . "\n";
-					echo '<input type="submit" name="' . $this->dashed_name . '-defaults" id="' . $this->dashed_name . '-defaults" class="button-primary" value="Reset to Defaults" />' . "\n";
+					echo '<input type="submit" name="' . $this->dashed_name . '-submit" class="button-primary" value="' . __( 'Save Changes', 'wp-cron-control' ) . '" />' . "\n";
+					echo '<input type="submit" name="' . $this->dashed_name . '-defaults" id="' . $this->dashed_name . '-defaults" class="button-primary" value="' . __( 'Reset to Defaults', 'wp-cron-control' ) . '" />' . "\n";
 				}
 		?>
 			</p>
