@@ -3,7 +3,7 @@ Contributors: tott, ethitter, automattic
 Tags: wp-cron, cron, cron jobs, post missed schedule, scheduled posts
 Donate link: http://hitchhackerguide.com
 Tested up to: 3.6
-Stable tag: trunk
+Stable tag: 0.7
 
 This plugin allows you to take control over the execution of cron jobs.
 
