@@ -288,7 +288,7 @@ class WP_Cron_Control {
 		global $wpdb;
 
 		// grab all scheduled posts from posts table
-		$sql = $wpdb->prepare( "SELECT ID, post_date_gmt FROM $wpdb->posts WHERE post_status = %s", 'future' );
+		$sql = "SELECT ID, post_date_gmt FROM $wpdb->posts WHERE post_status = 'future'";
 		$results = $wpdb->get_results( $sql );
 		$return = true;
 
