@@ -4,8 +4,7 @@
  Plugin URI: http://wordpress.org/extend/plugins/wp-cron-control/
  Description: Take control of wp-cron execution.
  Author: Thorsten Ott, Erick Hitter, Automattic
- Version: 0.7
- Author URI: http://hitchhackerguide.com
+ Version: 0.7.1
  Text Domain: wp-cron-control
  */
 
@@ -127,7 +126,7 @@ class WP_Cron_Control {
 		 * and  http://core.trac.wordpress.org/browser/trunk/wp-includes/cron.php#L258
 		 */
 		if ( 1 == $this->settings['enable'] ) {
-			remove_action( 'sanitize_comment_cookies', 'wp_cron' );
+			remove_action( 'init', 'wp_cron' );
 			add_action( 'init', array( &$this, 'validate_cron_request' ) );
 		}
 
@@ -142,15 +141,38 @@ class WP_Cron_Control {
 	}
 
 	public function validate_settings( $settings ) {
-		// reset to defaults
-		if ( !empty( $_POST[ $this->dashed_name . '-defaults'] ) ) {
-			$settings = $this->default_settings;
-			$_REQUEST['_wp_http_referer'] = add_query_arg( 'defaults', 'true', $_REQUEST['_wp_http_referer'] );
-		// or do some custom validations
-		} else {
+		$validated_settings = array();
 
+		if ( !empty( $_POST[ $this->dashed_name . '-defaults'] ) ) {
+			// Reset to defaults
+			$validated_settings = $this->default_settings;
+			$_REQUEST['_wp_http_referer'] = add_query_arg( 'defaults', 'true', $_REQUEST['_wp_http_referer'] );
+		} else {
+			foreach ( $this->settings_texts as $setting => $setting_info ) {
+				switch( $setting ) {
+					case 'enable':
+					case 'enable_scheduled_post_validation':
+						$validated_settings[ $setting ] = intval( $settings[ $setting ] );
+						if ( $validated_settings[ $setting ] > 1 || $validated_settings[ $setting ] < 0 ) {
+							$validated_settings[ $setting ] = $this->default_settings[ $setting ];
+						}
+						break;
+
+					case 'secret_string':
+						$validated_settings[ $setting ] = sanitize_text_field( $settings[ $setting ] );
+						if ( empty( $validated_settings[ $setting ] ) ) {
+							$validated_settings[ $setting ] = $this->default_settings[ $setting ];
+						}
+						break;
+
+					default:
+						$validated_settings[ $setting ] = sanitize_text_field( $settings[ $setting ] );
+						break;
+				}
+			}
 		}
-		return $settings;
+
+		return $validated_settings;
 	}
 
 	public function settings_page() {
@@ -191,13 +213,13 @@ class WP_Cron_Control {
 								<div><input type="text" name="<?php echo $this->plugin_prefix; ?>settings[<?php echo $setting; ?>]" id="<?php echo $this->dashed_name . '-' . $setting; ?>" class="postform" value="<?php echo esc_attr( $value ); ?>" /></div>
 							<?php break;
 							case 'echo': ?>
-								<div><span id="<?php echo $this->dashed_name . '-' . $setting; ?>" class="postform"><?php echo esc_attr( $value ); ?></span></div>
+								<div><span id="<?php echo $this->dashed_name . '-' . $setting; ?>" class="postform"><?php echo esc_html( $value ); ?></span></div>
 							<?php break;
 							default: ?>
-								<?php echo $this->settings_texts[$setting]['type']; ?>
+								<?php echo esc_html( $this->settings_texts[$setting]['type'] ); ?>
 							<?php break;
 						endswitch; ?>
-						<?php if ( !empty( $this->settings_texts[$setting]['desc'] ) ) { echo $this->settings_texts[$setting]['desc']; } ?>
+						<?php if ( !empty( $this->settings_texts[$setting]['desc'] ) ) { echo wp_kses_post( $this->settings_texts[$setting]['desc'] ); } ?>
 					</td>
 				</tr>
 				<?php endforeach; ?>
