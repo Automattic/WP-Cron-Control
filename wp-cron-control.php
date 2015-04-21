@@ -1,7 +1,7 @@
 <?php
 /*
  Plugin Name: WP-Cron Control
- Plugin URI: http://wordpress.org/extend/plugins/wp-cron-control/
+ Plugin URI: https://wordpress.org/plugins/wp-cron-control/
  Description: Take control of wp-cron execution.
  Author: Thorsten Ott, Erick Hitter, Automattic
  Version: 0.7.1
