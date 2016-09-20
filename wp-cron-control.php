@@ -345,7 +345,7 @@ class WP_Cron_Control {
 
 			// otherwise check each of them
 			foreach ( $results as $r ) {
-				$gmt_time = strtotime( get_gmt_from_date( $r->post_date ) );
+				$gmt_time = strtotime( get_gmt_from_date( $r->post_date ) . ' GMT' );
 
 				// grab the scheduled job for this post
 				$timestamp = wp_next_scheduled( 'publish_future_post', array( (int) $r->ID ) );
